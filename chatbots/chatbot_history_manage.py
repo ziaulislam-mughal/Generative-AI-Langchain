@@ -1,7 +1,7 @@
 import os 
 from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
-from langchain_core.messages import HumanMessage 
+from langchain_core.messages import HumanMessage , AIMessage  , SystemMessage
 
 # 1. Load Environment 
 load_dotenv()
@@ -25,7 +25,9 @@ llm = HuggingFaceEndpoint(
 
 # 4. Manage History 
 
-chat_history = []
+chat_history = [
+    SystemMessage(content="You are a helpful assistant."),
+]
 
 
 # 5. Wrap it in ChatHuggingFace (This handles the "conversational" format for you)
@@ -46,7 +48,7 @@ while True:
         
         # Invoke the chat model
         response = chat_model.invoke(chat_history)
-        chat_history.append(response.content)
+        chat_history.append(AIMessage(content = response.content))
         
         # For ChatHuggingFace, we DO use .content
         print("Chatbot :", response.content)
