@@ -1,0 +1,70 @@
+from typing import TypedDict
+
+class ReviewOutput(TypedDict):
+    sentiment: str
+    summary: str
+
+
+from langchain_huggingface import HuggingFaceEndpoint
+from langchain_core.prompts import ChatPromptTemplate
+import os
+from dotenv import load_dotenv
+
+
+
+# 1. Load Environment
+load_dotenv()
+
+# 2. Check Token
+token = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+if not token:
+    print("Error: HUGGINGFACEHUB_API_TOKEN is not set in the .env file.")
+
+# 3. Setup the Endpoint (Removed task="text-generation")
+repo_id = "meta-llama/Llama-3.1-8B-Instruct"
+
+llm = HuggingFaceEndpoint(
+    repo_id=repo_id,
+    max_new_tokens=512,
+    temperature=0.7,
+    huggingfacehub_api_token=token,
+)
+
+
+prompt = ChatPromptTemplate.from_template(
+"""
+Analyze the following phone review.
+
+Return output in JSON format:
+{{
+ "sentiment": "...",
+ "summary": "..."
+}}
+
+Review: {review}
+"""
+)
+
+
+def structured_output(review: str) -> ReviewOutput:
+
+    chain = prompt | llm
+    
+    response = chain.invoke({"review": review})
+
+    return response
+
+
+review = "The phone design is beautiful but the battery life is very poor."
+
+result = structured_output(review)
+
+print(result)
+
+
+
+sentiment = result["sentiment"]
+summary = result["summary"]
+
+print("Sentiment:", sentiment)
+print("Summary:", summary)
